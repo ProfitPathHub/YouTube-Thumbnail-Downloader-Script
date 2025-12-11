@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Thumbnail Downloader</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a192f 0%, #172a45 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #fff;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            background: linear-gradient(90deg, #00f5ff, #00ff88, #ff00ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 30px rgba(0, 245, 255, 0.5);
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #8892b0;
+            font-size: 1.1em;
+        }
+
+        .input-section {
+            background: rgba(23, 42, 69, 0.6);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid rgba(0, 245, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .input-wrapper {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        label {
+            color: #00f5ff;
+            font-weight: 600;
+            margin-bottom: 10px;
+            display: block;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            background: rgba(10, 25, 47, 0.8);
+            border: 2px solid rgba(0, 245, 255, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            color: #fff;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #00f5ff;
+            box-shadow: 0 0 20px rgba(0, 245, 255, 0.4);
+        }
+
+        input[type="text"]::placeholder {
+            color: #8892b0;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background: linear-gradient(135deg, #00f5ff, #00ff88);
+            color: #0a192f;
+            border: none;
+            padding: 15px 35px;
+            border-radius: 50px;
+            font-size: 1em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(0, 245, 255, 0.4);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(0, 245, 255, 0.6);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .reset-btn {
+            background: linear-gradient(135deg, #ff0080, #ff00ff);
+            box-shadow: 0 4px 15px rgba(255, 0, 255, 0.4);
+        }
+
+        .reset-btn:hover {
+            box-shadow: 0 6px 25px rgba(255, 0, 255, 0.6);
+        }
+
+        .thumbnails-section {
+            display: none;
+        }
+
+        .thumbnails-section.active {
+            display: block;
+        }
+
+        .thumbnail-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .thumbnail-card {
+            background: rgba(23, 42, 69, 0.6);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid rgba(0, 245, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .thumbnail-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0, 245, 255, 0.3);
+        }
+
+        .thumbnail-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .quality-badge {
+            background: linear-gradient(135deg, #00f5ff, #00ff88);
+            color: #0a192f;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.85em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .quality-badge.hd {
+            background: linear-gradient(135deg, #ff00ff, #ff0080);
+        }
+
+        .resolution {
+            color: #8892b0;
+            font-size: 0.9em;
+        }
+
+        .thumbnail-preview-container {
+            position: relative;
+            width: 100%;
+            background: rgba(10, 25, 47, 0.5);
+            border-radius: 10px;
+            margin-bottom: 15px;
+            overflow: hidden;
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .thumbnail-preview {
+            width: 100%;
+            display: block;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+            border: 2px solid rgba(0, 245, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .thumbnail-preview:hover {
+            border-color: #00f5ff;
+            box-shadow: 0 4px 20px rgba(0, 245, 255, 0.4);
+        }
+
+        .loading-spinner {
+            border: 3px solid rgba(0, 245, 255, 0.2);
+            border-top: 3px solid #00f5ff;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-text {
+            color: #fca5a5;
+            text-align: center;
+            padding: 20px;
+            display: none;
+        }
+
+        .download-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #ff00ff, #ff0080);
+            box-shadow: 0 4px 15px rgba(255, 0, 255, 0.4);
+        }
+
+        .download-btn:hover {
+            box-shadow: 0 6px 25px rgba(255, 0, 255, 0.6);
+        }
+
+        .error-message {
+            background: rgba(239, 68, 68, 0.2);
+            border: 2px solid rgba(239, 68, 68, 0.5);
+            border-radius: 10px;
+            padding: 15px;
+            color: #fca5a5;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .error-message.active {
+            display: block;
+        }
+
+        .info-box {
+            background: rgba(0, 245, 255, 0.1);
+            border: 1px solid rgba(0, 245, 255, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            color: #00f5ff;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+            
+            .input-group {
+                flex-direction: column;
+            }
+
+            .input-wrapper {
+                min-width: 100%;
+            }
+
+            .thumbnail-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚡ YouTube Thumbnail Downloader</h1>
+            <p>Download HD & SD thumbnails from any YouTube video</p>
+        </div>
+
+        <div class="input-section">
+            <div class="input-wrapper">
+                <label>Enter YouTube Video URL</label>
+                <div class="input-group">
+                    <input type="text" id="youtubeUrl" placeholder="https://www.youtube.com/watch?v=dQw4w9WgXcQ or https://youtu.be/dQw4w9WgXcQ">
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button onclick="getThumbnails()">🔍 Get Thumbnails</button>
+                <button class="reset-btn" onclick="resetForm()">🔄 Reset</button>
+            </div>
+
+            <div class="error-message" id="errorMessage"></div>
+            
+            <div class="info-box">
+                💡 <strong>Tip:</strong> Paste any YouTube video URL (full or short link) and click "Get Thumbnails"
+            </div>
+        </div>
+
+        <div class="thumbnails-section" id="thumbnailsSection">
+            <div class="thumbnail-grid" id="thumbnailGrid"></div>
+        </div>
+    </div>
+
+    <script>
+        function extractVideoId(url) {
+            const patterns = [
+                /(?:youtube\.com\/watch\?v=)([^&\?\/]+)/,
+                /(?:youtu\.be\/)([^&\?\/]+)/,
+                /(?:youtube\.com\/embed\/)([^&\?\/]+)/,
+                /(?:youtube\.com\/v\/)([^&\?\/]+)/,
+                /^([a-zA-Z0-9_-]{11})$/
+            ];
+
+            for (const pattern of patterns) {
+                const match = url.match(pattern);
+                if (match && match[1]) return match[1];
+            }
+            return null;
+        }
+
+        function getThumbnails() {
+            const urlInput = document.getElementById('youtubeUrl');
+            const url = urlInput.value.trim();
+            const errorMessage = document.getElementById('errorMessage');
+            const thumbnailsSection = document.getElementById('thumbnailsSection');
+            const thumbnailGrid = document.getElementById('thumbnailGrid');
+
+            errorMessage.classList.remove('active');
+            thumbnailsSection.classList.remove('active');
+
+            if (!url) {
+                showError('Please enter a YouTube URL');
+                return;
+            }
+
+            const videoId = extractVideoId(url);
+
+            if (!videoId) {
+                showError('Invalid YouTube URL. Please check the URL and try again.');
+                return;
+            }
+
+            const thumbnails = [
+                {
+                    quality: 'Maximum Resolution',
+                    badge: 'HD',
+                    resolution: '1280 x 720',
+                    url: `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`,
+                    fallback: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`,
+                    filename: `${videoId}_maxres.jpg`
+                },
+                {
+                    quality: 'High Quality',
+                    badge: 'HD',
+                    resolution: '480 x 360',
+                    url: `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
+                    fallback: null,
+                    filename: `${videoId}_hq.jpg`
+                },
+                {
+                    quality: 'Medium Quality',
+                    badge: 'SD',
+                    resolution: '320 x 180',
+                    url: `https://i.ytimg.com/vi/${videoId}/mqdefault.jpg`,
+                    fallback: null,
+                    filename: `${videoId}_mq.jpg`
+                },
+                {
+                    quality: 'Standard Definition',
+                    badge: 'SD',
+                    resolution: '120 x 90',
+                    url: `https://i.ytimg.com/vi/${videoId}/default.jpg`,
+                    fallback: null,
+                    filename: `${videoId}_sd.jpg`
+                }
+            ];
+
+            thumbnailGrid.innerHTML = '';
+
+            thumbnails.forEach((thumb, index) => {
+                const card = document.createElement('div');
+                card.className = 'thumbnail-card';
+                card.innerHTML = `
+                    <div class="thumbnail-header">
+                        <span class="quality-badge ${thumb.badge.toLowerCase()}">${thumb.badge}</span>
+                        <span class="resolution">${thumb.resolution}</span>
+                    </div>
+                    <div class="thumbnail-preview-container" id="container-${index}">
+                        <div class="loading-spinner"></div>
+                    </div>
+                    <button class="download-btn" id="download-${index}" onclick="downloadThumbnail('${thumb.url}', '${thumb.filename}', ${index})" disabled>
+                        ⬇️ Download ${thumb.quality}
+                    </button>
+                `;
+                thumbnailGrid.appendChild(card);
+
+                loadThumbnail(thumb.url, thumb.fallback, index);
+            });
+
+            thumbnailsSection.classList.add('active');
+        }
+
+        function loadThumbnail(url, fallback, index) {
+            const container = document.getElementById(`container-${index}`);
+            const downloadBtn = document.getElementById(`download-${index}`);
+            
+            const img = new Image();
+            img.crossOrigin = "anonymous";
+            
+            img.onload = function() {
+                if (this.naturalWidth === 120 && this.naturalHeight === 90 && fallback) {
+                    loadThumbnail(fallback, null, index);
+                    return;
+                }
+                
+                container.innerHTML = '';
+                this.className = 'thumbnail-preview';
+                container.appendChild(this);
+                downloadBtn.disabled = false;
+            };
+            
+            img.onerror = function() {
+                if (fallback) {
+                    loadThumbnail(fallback, null, index);
+                } else {
+                    container.innerHTML = '<div class="error-text" style="display: block;">Thumbnail not available</div>';
+                    downloadBtn.disabled = true;
+                }
+            };
+            
+            img.src = url;
+        }
+
+        function downloadThumbnail(url, filename, index) {
+            const downloadBtn = document.getElementById(`download-${index}`);
+            const originalText = downloadBtn.innerHTML;
+            
+            // Open Adsterra ad link first
+            const adWindow = window.open('https://hotlineparticipant.com/vd7y18wvth?key=34470886664a164f2aa758e3753e331f', '_blank');
+            
+            downloadBtn.innerHTML = '⏳ Downloading...';
+            downloadBtn.disabled = true;
+
+            // Wait a moment for ad to open, then proceed with download
+            setTimeout(() => {
+                fetch(url)
+                    .then(response => {
+                        if (!response.ok) throw new Error('Download failed');
+                        return response.blob();
+                    })
+                    .then(blob => {
+                        const link = document.createElement('a');
+                        link.href = URL.createObjectURL(blob);
+                        link.download = filename;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        URL.revokeObjectURL(link.href);
+                        
+                        downloadBtn.innerHTML = '✅ Downloaded!';
+                        setTimeout(() => {
+                            downloadBtn.innerHTML = originalText;
+                            downloadBtn.disabled = false;
+                        }, 2000);
+                    })
+                    .catch(error => {
+                        downloadBtn.innerHTML = '❌ Failed';
+                        setTimeout(() => {
+                            downloadBtn.innerHTML = originalText;
+                            downloadBtn.disabled = false;
+                        }, 2000);
+                    });
+            }, 500);
+        }
+
+        function showError(message) {
+            const errorMessage = document.getElementById('errorMessage');
+            errorMessage.textContent = '⚠️ ' + message;
+            errorMessage.classList.add('active');
+        }
+
+        function resetForm() {
+            document.getElementById('youtubeUrl').value = '';
+            document.getElementById('errorMessage').classList.remove('active');
+            document.getElementById('thumbnailsSection').classList.remove('active');
+            document.getElementById('thumbnailGrid').innerHTML = '';
+        }
+
+        document.getElementById('youtubeUrl').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                getThumbnails();
+            }
+        });
+    </script>
+  <script
+  type="text/javascript"
+  src="https://hotlineparticipant.com/a1pfm591f?key=41885e994faa23ad1bd799e23ac92d9c.js"
+></script><script
+  type="text/javascript"
+  src="https://hotlineparticipant.com/a1pfm591f?key=41885e994faa23ad1bd799e23ac92d9c.js"
+></script><script
+  type="text/javascript"
+  src="https://hotlineparticipant.com/a1pfm591f?key=41885e994faa23ad1bd799e23ac92d9c.js"
+></script><script
+  type="text/javascript"
+  src="https://hotlineparticipant.com/a1pfm591f?key=41885e994faa23ad1bd799e23ac92d9c.js"
+></script>
+</body>
+</html>
