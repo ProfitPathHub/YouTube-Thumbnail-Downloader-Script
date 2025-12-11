@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>YouTube Thumbnail Downloader – Premium Tool</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #111;
+      color: #fff;
+      margin: 0;
+      padding: 40px;
+      text-align: center;
+    }
+    .box {
+      background: #1a1a1a;
+      padding: 20px;
+      border-radius: 12px;
+      max-width: 500px;
+      margin: auto;
+      box-shadow: 0 0 20px rgba(0,0,0,0.4);
+    }
+    h1 { font-size: 28px; }
+    .price { font-size: 22px; margin: 10px 0; color: #0f0; }
+  </style>
+
+  <script src="https://www.paypal.com/sdk/js?client-id=sb&currency=USD"></script>
+</head>
+
+<body>
+
+<div class="box">
+  <h1>🎨 YouTube Thumbnail Downloader – Premium Tool</h1>
+  <p>Download any YouTube video thumbnail in HD instantly.</p>
+
+  <p class="price">💰 Price: <b>$5 Only</b></p>
+  <p>After payment, download will be available automatically.</p>
+
+  <div id="paypal-button-container"></div>
+
+  <p id="status"></p>
+</div>
+
+<script>
+paypal.Buttons({
+    createOrder: function(data, actions) {
+        return actions.order.create({
+            purchase_units: [{
+                amount: { value: "5.00" }
+            }]
+        });
+    },
+
+    onApprove: function(data, actions) {
+        document.getElementById("status").innerHTML = "⏳ Verifying payment...";
+
+        return fetch(`/api/verify-payment?id=${data.orderID}`)
+            .then(res => res.json())
+            .then(result => {
+                if (result.success) {
+                    window.location.href = result.downloadURL; 
+                } else {
+                    document.getElementById("status").innerHTML = "❌ Payment verification failed.";
+                }
+            });
+    }
+}).render('#paypal-button-container');
+</script>
+
+</body>
+</html>
